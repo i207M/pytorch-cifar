@@ -94,7 +94,7 @@ scheduler = torch.optim.lr_scheduler.MultiStepLR(
 )
 
 # Log
-date_str = time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime())
+date_str = time.strftime('%Y_%m_%d-%H_%M_%S', time.localtime())
 log_dir = Path('./runs') / date_str
 wdir = log_dir / 'weights'
 writer = SummaryWriter(log_dir)
