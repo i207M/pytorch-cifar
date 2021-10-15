@@ -4,12 +4,15 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import torch.backends.cudnn as cudnn
+from torch.utils.tensorboard import SummaryWriter
 
 import torchvision
 import torchvision.transforms as transforms
 
 import os
 import argparse
+import time
+from pathlib import Path
 
 from models import *
 from utils import progress_bar
@@ -19,6 +22,8 @@ parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
 parser.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
 args = parser.parse_args()
 
+os.environ["CUDA_VISIBLE_DEVICES"] = "2,3"
+
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 best_acc = 0  # best test accuracy
 start_epoch = 0  # start from epoch 0 or last checkpoint epoch
@@ -26,7 +31,6 @@ start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 # Data
 print('==> Preparing data..')
 transform_train = transforms.Compose([
-    transforms.RandomCrop(32, padding=4),
     transforms.RandomHorizontalFlip(),
     transforms.ToTensor(),
     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
@@ -65,7 +69,8 @@ print('==> Building model..')
 # net = ShuffleNetV2(1)
 # net = EfficientNetB0()
 # net = RegNetX_200MF()
-net = SimpleDLA()
+# net = SimpleDLA()
+net = ResNet56()
 net = net.to(device)
 if device == 'cuda':
     net = torch.nn.DataParallel(net)
@@ -75,14 +80,22 @@ if args.resume:
     # Load checkpoint.
     print('==> Resuming from checkpoint..')
     assert os.path.isdir('checkpoint'), 'Error: no checkpoint directory found!'
-    checkpoint = torch.load('./checkpoint/ckpt.pth')
+    checkpoint = torch.load('./checkpoint/last.pth')
     net.load_state_dict(checkpoint['net'])
     best_acc = checkpoint['acc']
     start_epoch = checkpoint['epoch']
 
 criterion = nn.CrossEntropyLoss()
+# Original: weight decay = 1e-4
 optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=5e-4)
+# Original scheduler !!!
 scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+
+# Log
+date_str = time.strftime('%Y-%m-%d_%H-%M-%S', time.localtime())
+log_dir = Path('./runs') / date_str
+wdir = log_dir / 'weights'
+writer = SummaryWriter(log_dir)
 
 
 # Training
@@ -109,6 +122,8 @@ def train(epoch):
             batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)' %
             (train_loss / (batch_idx + 1), 100. * correct / total, correct, total)
         )
+    writer.add_scalar('train/loss', train_loss / len(trainloader), epoch)
+    writer.add_scalar('train/acc', 100. * correct / total, epoch)
 
 
 def test(epoch):
@@ -132,23 +147,33 @@ def test(epoch):
                 batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)' %
                 (test_loss / (batch_idx + 1), 100. * correct / total, correct, total)
             )
+    writer.add_scalar('test/loss', test_loss / len(testloader), epoch)
+    writer.add_scalar('test/acc', 100. * correct / total, epoch)
 
     # Save checkpoint.
     acc = 100. * correct / total
     if acc > best_acc:
-        print('Saving..')
-        state = {
-            'net': net.state_dict(),
-            'acc': acc,
-            'epoch': epoch,
-        }
-        if not os.path.isdir('checkpoint'):
-            os.mkdir('checkpoint')
-        torch.save(state, './checkpoint/ckpt.pth')
         best_acc = acc
+        save_checkpoint(wdir / 'best.pth', epoch)
 
 
-for epoch in range(start_epoch, start_epoch + 200):
-    train(epoch)
-    test(epoch)
-    scheduler.step()
+def save_checkpoint(path, epoch: int):
+    global best_acc
+    print(f'Saving.. Epoch: {epoch}, Acc: {best_acc}')
+    state = {
+        'net': net.state_dict(),
+        'acc': best_acc,
+        'epoch': epoch,
+    }
+    torch.save(state, path)
+
+
+if __name__ == '__main__':
+    os.makedirs(wdir, exist_ok=True)
+    for epoch in range(start_epoch, start_epoch + 200):
+        try:
+            train(epoch)
+            test(epoch)
+            scheduler.step()
+        finally:
+            save_checkpoint(wdir / 'last.pth', epoch)
