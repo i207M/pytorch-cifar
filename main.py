@@ -1,18 +1,20 @@
 '''Train CIFAR10 with PyTorch.'''
-import torch
-import torch.nn as nn
-import torch.optim as optim
-import torch.nn.functional as F
-import torch.backends.cudnn as cudnn
-from torch.utils.tensorboard import SummaryWriter
 
-import torchvision
-import torchvision.transforms as transforms
-
-import os
 import argparse
+import os
 import time
 from pathlib import Path
+
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+
+import torch
+import torch.backends.cudnn as cudnn
+import torch.nn as nn
+import torch.nn.functional as F
+import torch.optim as optim
+import torchvision
+import torchvision.transforms as transforms
+from torch.utils.tensorboard import SummaryWriter
 
 from models import *
 from utils import progress_bar
@@ -21,8 +23,6 @@ parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
 parser.add_argument('--resume', '-r', action='store_true', help='resume from checkpoint')
 args = parser.parse_args()
-
-os.environ["CUDA_VISIBLE_DEVICES"] = "2,3"
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 best_acc = 0  # best test accuracy
@@ -175,5 +175,6 @@ if __name__ == '__main__':
             train(epoch)
             test(epoch)
             scheduler.step()
-        finally:
-            save_checkpoint(wdir / 'last.pth', epoch)
+        except KeyboardInterrupt:
+            break
+    save_checkpoint(wdir / 'last.pth', epoch)
