@@ -1,6 +1,8 @@
 runs/*
 data/*
 data2/*
+save_*
+log_*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
