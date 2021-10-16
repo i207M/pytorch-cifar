@@ -14,6 +14,13 @@ import torch.utils.data
 import torchvision.transforms as transforms
 import torchvision.datasets as datasets
 import models.resnet56_other as resnet
+from torch.utils.tensorboard import SummaryWriter
+from pathlib import Path
+
+date_str = time.strftime('%Y_%m_%d-%H_%M_%S', time.localtime())
+log_dir = Path('./runs') / date_str
+wdir = log_dir / 'weights'
+writer = SummaryWriter(log_dir)
 
 # model_names = sorted(
 #     name for name in resnet.__dict__ if name.islower() and not name.startswith("__")
@@ -175,7 +182,7 @@ def main():
         lr_scheduler.step()
 
         # evaluate on validation set
-        prec1 = validate(val_loader, model, criterion)
+        prec1 = validate(val_loader, model, criterion, epoch)
 
         # remember best prec@1 and save checkpoint
         is_best = prec1 > best_prec1
@@ -259,8 +266,11 @@ def train(train_loader, model, criterion, optimizer, epoch):
                 )
             )
 
+    writer.add_scalar('train/loss', losses.avg, epoch)
+    writer.add_scalar('train/acc', top1.avg, epoch)
 
-def validate(val_loader, model, criterion):
+
+def validate(val_loader, model, criterion, epoch=-1):
     """
     Run evaluation
     """
@@ -308,6 +318,9 @@ def validate(val_loader, model, criterion):
                 )
 
     print(' * Prec@1 {top1.avg:.3f}'.format(top1=top1))
+    if epoch != -1:
+        writer.add_scalar('test/loss', losses.avg, epoch)
+        writer.add_scalar('test/acc', top1.avg, epoch)
 
     return top1.avg
 
