@@ -16,7 +16,7 @@ import torchvision
 import torchvision.transforms as transforms
 from torch.utils.tensorboard import SummaryWriter
 
-from models.resnet56 import ResNet56
+from models.resnet56 import ResNet56        
 # from utils_old import progress_bar
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')

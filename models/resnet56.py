@@ -11,10 +11,9 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.nn.init as init
 
-
-def _weights_init(m):
-    if isinstance(m, nn.Linear) or isinstance(m, nn.Conv2d):
-        init.kaiming_normal_(m.weight)
+# def _weights_init(m):
+#     if isinstance(m, nn.Linear) or isinstance(m, nn.Conv2d):
+#         init.kaiming_normal_(m.weight)
 
 
 class LambdaLayer(nn.Module):
@@ -49,7 +48,7 @@ class BasicBlock(nn.Module):
             #     nn.BatchNorm2d(self.expansion * planes)
             # )
 
-        self.apply(_weights_init)
+        # self.apply(_weights_init)
 
     def forward(self, x):
         out = F.relu(self.bn1(self.conv1(x)))
