@@ -2,6 +2,8 @@
 
 无quantization：Acc 93.27；原论文93.03
 
+理解：实现一个scaled binary connect
+
 ## 疑惑
 
 为什么lr改变时，acc会猛增？
@@ -11,6 +13,8 @@
 数据增强提高generalization
 
 使用cosine lr再高一个点
+
+batch_size大小对acc的影响有好有坏
 
 ## 探索
 

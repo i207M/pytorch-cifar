@@ -101,10 +101,11 @@ criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(
     net.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay
 )
-# scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
-scheduler = torch.optim.lr_scheduler.MultiStepLR(
-    optimizer, milestones=[100, 150], last_epoch=args.start_epoch - 1
-)
+scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+
+# scheduler = torch.optim.lr_scheduler.MultiStepLR(
+#     optimizer, milestones=[100, 150], last_epoch=args.start_epoch - 1
+# )
 
 
 # Training
