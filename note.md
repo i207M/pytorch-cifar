@@ -9,3 +9,5 @@
 ## 收获
 
 数据增强提高generalization
+
+使用cosine lr再高一个点

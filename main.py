@@ -5,7 +5,7 @@ import os
 import time
 from pathlib import Path
 
-os.environ["CUDA_VISIBLE_DEVICES"] = "3"
+os.environ["CUDA_VISIBLE_DEVICES"] = "0"
 
 import torch
 import torch.backends.cudnn as cudnn
@@ -32,6 +32,7 @@ start_epoch = 0  # start from epoch 0 or last checkpoint epoch
 print('==> Preparing data..')
 transform_train = transforms.Compose([
     transforms.RandomHorizontalFlip(),
+    transforms.RandomCrop(32, 4),
     transforms.ToTensor(),
     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
 ])
