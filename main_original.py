@@ -16,8 +16,7 @@ import torchvision
 import torchvision.transforms as transforms
 from torch.utils.tensorboard import SummaryWriter
 
-from models.resnet56 import ResNet56        
-# from utils_old import progress_bar
+from models.resnet56 import ResNet56
 
 parser = argparse.ArgumentParser(description='PyTorch CIFAR10 Training')
 parser.add_argument('--lr', default=0.1, type=float, help='learning rate')
@@ -91,7 +90,7 @@ if args.resume:
     start_epoch = checkpoint['epoch']
 
 criterion = nn.CrossEntropyLoss()
-# Original: weight decay = 1e-4
+# Original weight decay = 1e-4
 optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=0.9, weight_decay=1e-4)
 # Original scheduler
 scheduler = torch.optim.lr_scheduler.MultiStepLR(
@@ -103,7 +102,6 @@ date_str = time.strftime('%Y_%m_%d-%H_%M_%S', time.localtime())
 log_dir = Path('./runs') / date_str
 wdir = log_dir / 'weights'
 writer = SummaryWriter(log_dir)
-PRINT_FREQ = 100
 
 
 # Training
@@ -130,11 +128,7 @@ def train(epoch):
         #     batch_idx, len(trainloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)' %
         #     (train_loss / (batch_idx + 1), 100. * correct / total, correct, total)
         # )
-        if batch_idx % PRINT_FREQ == 0:
-            print(
-                'idx: %d, Loss: %.3f | Acc: %.3f' %
-                (batch_idx, train_loss / (batch_idx + 1), 100. * correct / total)
-            )
+    print('#%d, Loss: %.3f | Acc: %.3f' % (epoch, train_loss / len(trainloader), 100. * correct / total))
     writer.add_scalar('train/loss', train_loss / len(trainloader), epoch)
     writer.add_scalar('train/acc', 100. * correct / total, epoch)
 
@@ -145,7 +139,6 @@ def test(epoch):
     test_loss = 0
     correct = 0
     total = 0
-
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.to(device), targets.to(device)
@@ -161,11 +154,7 @@ def test(epoch):
             #     batch_idx, len(testloader), 'Loss: %.3f | Acc: %.3f%% (%d/%d)' %
             #     (test_loss / (batch_idx + 1), 100. * correct / total, correct, total)
             # )
-            if batch_idx % PRINT_FREQ == 0:
-                print(
-                    'idx: %d, Loss: %.3f | Acc: %.3f' %
-                    (batch_idx, test_loss / (batch_idx + 1), 100. * correct / total)
-                )
+    print('#%d, Loss: %.3f | Acc: %.3f' % (epoch, test_loss / len(testloader), 100. * correct / total))
     writer.add_scalar('test/loss', test_loss / len(testloader), epoch)
     writer.add_scalar('test/acc', 100. * correct / total, epoch)
 

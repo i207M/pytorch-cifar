@@ -1,6 +1,6 @@
-runs/*
-data/*
-data2/*
+runs/
+data/
+data2/
 save_*
 log_*
 
