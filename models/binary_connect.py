@@ -17,9 +17,10 @@ class BinaryConnectWrapper(nn.Module):
                 self.target_params.append(layer.weight)
         self.n_weight = len(self.target_params)
 
-    def forward(self):
-        return self.model()
+    def forward(self, x):
+        return self.model(x)
 
+    # deterministic
     def binarize(self):
         self.save()
         for p in self.target_params:

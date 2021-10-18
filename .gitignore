@@ -3,6 +3,7 @@ data/
 data2/
 save_*
 log_*
+temp.py
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
