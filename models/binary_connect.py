@@ -4,7 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 
-class BinaryConnectWrapper(nn.Module):
+class BinaryConnect(nn.Module):
     def __init__(self, model: nn.Module) -> None:
         super().__init__()
         self.model = model
@@ -40,6 +40,10 @@ class BinaryConnectWrapper(nn.Module):
             self.target_params[i].data.copy_(self.saved_params[i])
 
 
+class ScaledBinaryConnect(BinaryConnect):
+    pass
+
+
 if __name__ == '__main__':
-    bc = BinaryConnectWrapper(nn.Module())
+    bc = ScaledBinaryConnect(nn.Module())
     print(list(bc.named_children()))

@@ -1,12 +1,11 @@
 '''ResNet with BinaryConnect'''
-from .binary_connect import BinaryConnectWrapper
-from .one_bit import OneBitWrapper
+from .binary_connect import BinaryConnect, ScaledBinaryConnect
 from .resnet56 import ResNet56
 
 
 def ResNet56_BinaryConnect():
-    return BinaryConnectWrapper(ResNet56())
+    return BinaryConnect(ResNet56())
 
 
-def ResNet56_OneBit():
-    return OneBitWrapper(ResNet56())
+def ResNet56_ScaledBinaryConnect():
+    return ScaledBinaryConnect(ResNet56())
