@@ -82,11 +82,10 @@ open(log_dir / 'args.txt', 'w').write(str(args.__dict__))
 print('==> Building model..')
 net = ResNet56()
 net = net.cuda()
-net = torch.nn.DataParallel(net)
+# net = torch.nn.DataParallel(net)
 cudnn.benchmark = True
 
 best_acc = 0  # best test accuracy
-
 if args.resume != '':
     # Load checkpoint
     print('==> Resuming from checkpoint..')
