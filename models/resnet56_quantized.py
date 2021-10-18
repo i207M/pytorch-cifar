@@ -46,7 +46,7 @@ class BinaryWeightNet(BinaryConnect):
     def binarize(self):
         self.save()
         for p in self.target_params:
-            S = p.data().abs().mean()
+            S = p.data.abs().mean()
             p.data.copy_(p.data.sign() * S)
 
 
