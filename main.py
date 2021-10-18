@@ -107,7 +107,7 @@ scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 
 
 # Training
-def train(epoch):
+def train(epoch: int):
     print('\nEpoch: %d' % epoch)
     start_time = time.time()
     net.train()
@@ -134,7 +134,7 @@ def train(epoch):
     writer.add_scalar('train/acc', avg_acc, epoch)
 
 
-def test(epoch):
+def test(epoch: int):
     start_time = time.time()
     net.eval()
     test_loss = 0
