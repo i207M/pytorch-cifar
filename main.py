@@ -71,6 +71,8 @@ classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship'
 
 # Log
 date_str = time.strftime('%Y.%m.%d-%H.%M.%S', time.localtime())
+if args.name != '':
+    args.name = '-' + args.name
 log_dir = Path('./runs') / (date_str + args.name)
 wdir = log_dir / 'weights'
 writer = SummaryWriter(log_dir)
