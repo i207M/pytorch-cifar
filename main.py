@@ -43,7 +43,7 @@ args = parser.parse_args()
 print('==> Preparing data..')
 transform_train = transforms.Compose([
     transforms.RandomHorizontalFlip(),
-    transforms.RandomCrop(32, 4),  # Important
+    transforms.RandomCrop(32, 4),  # IMPORTANT
     transforms.ToTensor(),
     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
 ])
@@ -96,7 +96,7 @@ if args.resume != '':
     best_acc = checkpoint['acc']
     args.start_epoch = checkpoint['epoch']
 
-# Original weight decay = 1e-4
+# original weight decay = 1e-4
 criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(
     net.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay
@@ -112,17 +112,21 @@ scheduler = torch.optim.lr_scheduler.MultiStepLR(
 def train(epoch: int):
     print('\nEpoch: %d' % epoch)
     start_time = time.time()
-    net.train()
     train_loss = 0
     total = 0
     correct = 0
+
+    net.train()
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.cuda(), targets.cuda()
+        net.binarize()  # for weight quantized net
         outputs = net(inputs)
         loss = criterion(outputs, targets)
         optimizer.zero_grad()
         loss.backward()
+        net.restore()  # for weight quantized net
         optimizer.step()
+        net.clip()  # for weight quantized net
 
         train_loss += loss.item()
         _, predicted = outputs.max(1)
@@ -139,10 +143,12 @@ def train(epoch: int):
 
 def test(epoch: int):
     start_time = time.time()
-    net.eval()
     test_loss = 0
     total = 0
     correct = 0
+
+    net.eval()
+    net.binarize()  # for weight quantized net
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.cuda(), targets.cuda()
@@ -153,6 +159,7 @@ def test(epoch: int):
             _, predicted = outputs.max(1)
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
+    net.restore()  # for weight quantized net
 
     batch_time = time.time() - start_time
     avg_loss = test_loss / len(testloader)
