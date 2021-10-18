@@ -14,7 +14,7 @@ import torchvision
 import torchvision.transforms as transforms
 from torch.utils.tensorboard import SummaryWriter
 
-from models.resnet56 import ResNet56
+from models.resnet56_quantized import ResNet56_BinaryConnect
 
 # Args
 parser = argparse.ArgumentParser(description='PyTorch Training')
@@ -80,7 +80,7 @@ open(log_dir / 'args.txt', 'w').write(str(args.__dict__))
 
 # Model
 print('==> Building model..')
-net = ResNet56()
+net = ResNet56_BinaryConnect()
 net = net.cuda()
 # net = torch.nn.DataParallel(net)
 cudnn.benchmark = True
@@ -118,11 +118,14 @@ def train(epoch: int):
     net.train()
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.cuda(), targets.cuda()
+        net.binarize()  # for weight quantized net
         outputs = net(inputs)
         loss = criterion(outputs, targets)
         optimizer.zero_grad()
         loss.backward()
+        net.restore()  # for weight quantized net
         optimizer.step()
+        net.clip()  # for weight quantized net
 
         train_loss += loss.item()
         _, predicted = outputs.max(1)
@@ -144,6 +147,7 @@ def test(epoch: int):
     correct = 0
 
     net.eval()
+    net.binarize()  # for weight quantized net
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.cuda(), targets.cuda()
@@ -154,6 +158,7 @@ def test(epoch: int):
             _, predicted = outputs.max(1)
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
+    net.restore()  # for weight quantized net
 
     batch_time = time.time() - start_time
     avg_loss = test_loss / len(testloader)
