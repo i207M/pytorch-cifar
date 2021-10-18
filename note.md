@@ -11,3 +11,10 @@
 数据增强提高generalization
 
 使用cosine lr再高一个点
+
+## 探索
+
+Binarized Neural Networks: Training Neural Networks with Weights and
+Activations Constrained to +1 or −1
+
+不仅仅二值化了weights，而且二值化了activations
