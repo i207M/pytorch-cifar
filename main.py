@@ -101,10 +101,11 @@ criterion = nn.CrossEntropyLoss()
 optimizer = optim.SGD(
     net.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay
 )
-# scheduler = torch.optim.lr_scheduler.MultiStepLR(
-#     optimizer, milestones=[100, 150], last_epoch=start_epoch - 1
-# )
-scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+scheduler = torch.optim.lr_scheduler.MultiStepLR(
+    optimizer, milestones=[100, 150], last_epoch=args.start_epoch - 1
+)
+
+# scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
 
 
 # Training
@@ -128,9 +129,10 @@ def train(epoch: int):
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
 
+    batch_time = time.time() - start_time
     avg_loss = train_loss / len(trainloader)
     avg_acc = 100. * correct / total
-    print('Train Loss: %.3f | Acc: %.3f | Time: %.3fms' % (avg_loss, avg_acc, time.time() - start_time))
+    print('Train Loss: %.3f | Acc: %.3f | Time: %.3fms' % (avg_loss, avg_acc, batch_time))
     writer.add_scalar('train/loss', avg_loss, epoch)
     writer.add_scalar('train/acc', avg_acc, epoch)
 
@@ -152,9 +154,10 @@ def test(epoch: int):
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
 
+    batch_time = time.time() - start_time
     avg_loss = test_loss / len(testloader)
     avg_acc = 100. * correct / total
-    print('Test Loss: %.3f | Acc: %.3f | Time: %.3fms' % (avg_loss, avg_acc, time.time() - start_time))
+    print('Test Loss: %.3f | Acc: %.3f | Time: %.3fms' % (avg_loss, avg_acc, batch_time))
     writer.add_scalar('test/loss', avg_loss, epoch)
     writer.add_scalar('test/acc', avg_acc, epoch)
 
