@@ -7,6 +7,12 @@ Reference:
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torch.nn.init as init
+
+
+def _weights_init(m):
+    if isinstance(m, nn.Linear) or isinstance(m, nn.Conv2d):
+        init.kaiming_normal_(m.weight)
 
 
 class PreActBlock(nn.Module):
@@ -44,6 +50,8 @@ class PreActResNet_3Layer(nn.Module):
         self.layer2 = self._make_layer(block, 32, num_blocks[1], stride=2)
         self.layer3 = self._make_layer(block, 64, num_blocks[2], stride=2)
         self.linear = nn.Linear(64 * block.expansion, num_classes)
+
+        self.apply(_weights_init)
 
     def _make_layer(self, block, planes, num_blocks, stride):
         strides = [stride] + [1] * (num_blocks - 1)

@@ -33,7 +33,7 @@ parser.add_argument(
 parser.add_argument('--lr', default=0.1, type=float, metavar='LR', help='initial learning rate')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M', help='momentum')
 parser.add_argument(
-    '--weight-decay', default=5e-4, type=float, metavar='W', help='weight decay (default: 1e-4)'
+    '--weight-decay', default=1e-4, type=float, metavar='W', help='weight decay (default: 1e-4)'
 )
 parser.add_argument('-n', '--name', default='', type=str, help='name of the training')
 parser.add_argument('-r', '--resume', default='', type=str, metavar='D', help='resume from checkpoint')
