@@ -14,7 +14,7 @@ import torchvision
 import torchvision.transforms as transforms
 from torch.utils.tensorboard import SummaryWriter
 
-from models.resnet56_quantized import ResNet56_BinaryWeightNet
+from models.resnet56_quantized import ResNet56_BinaryConnect
 
 # Args
 parser = argparse.ArgumentParser(description='PyTorch Training')
@@ -80,7 +80,7 @@ open(log_dir / 'args.txt', 'w').write(str(args.__dict__))
 
 # Model
 print('==> Building model..')
-net = ResNet56_BinaryWeightNet()
+net = ResNet56_BinaryConnect()
 net = net.cuda()
 # net = torch.nn.DataParallel(net)
 cudnn.benchmark = True
@@ -126,7 +126,7 @@ def train(epoch: int):
         loss.backward()
         net.restore()  # for weight quantized net
         optimizer.step()
-        # net.clip()  # for weight quantized net
+        net.clip()  # for weight quantized net
 
         train_loss += loss.item()
         _, predicted = outputs.max(1)

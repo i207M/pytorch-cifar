@@ -14,7 +14,7 @@ import torchvision
 import torchvision.transforms as transforms
 from torch.utils.tensorboard import SummaryWriter
 
-from models.resnet56 import ResNet56
+from models.preact_resnet56 import PreActResNet56
 
 # Args
 parser = argparse.ArgumentParser(description='PyTorch Training')
@@ -33,7 +33,7 @@ parser.add_argument(
 parser.add_argument('--lr', default=0.1, type=float, metavar='LR', help='initial learning rate')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M', help='momentum')
 parser.add_argument(
-    '--weight-decay', default=1e-4, type=float, metavar='W', help='weight decay (default: 1e-4)'
+    '--weight-decay', default=5e-4, type=float, metavar='W', help='weight decay (default: 1e-4)'
 )
 parser.add_argument('-n', '--name', default='', type=str, help='name of the training')
 parser.add_argument('-r', '--resume', default='', type=str, metavar='D', help='resume from checkpoint')
@@ -80,7 +80,7 @@ open(log_dir / 'args.txt', 'w').write(str(args.__dict__))
 
 # Model
 print('==> Building model..')
-net = ResNet56()
+net = PreActResNet56()
 net = net.cuda()
 # net = torch.nn.DataParallel(net)
 cudnn.benchmark = True
@@ -102,10 +102,11 @@ optimizer = optim.SGD(
     net.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay
 )
 
-# scheduler = torch.optim.lr_scheduler.MultiStepLR(
-#     optimizer, milestones=[100, 150], last_epoch=args.start_epoch - 1
-# )
-scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+scheduler = torch.optim.lr_scheduler.MultiStepLR(
+    optimizer, milestones=[100, 150], last_epoch=args.start_epoch - 1
+)
+
+# scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epoch)
 
 
 # Training

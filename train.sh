@@ -1,7 +1,7 @@
-CUDA_VISIBLE_DEVICES=1 python main_quantized_copy.py \
-    -n bwn-cos-600e-large_batch \
-    -e 600 -b 384 --workers 8
+CUDA_VISIBLE_DEVICES=1 python main_bc.py \
+    -n bc-cos-preact-large_batch \
+    -e 200 -b 384 --workers 8
 
-CUDA_VISIBLE_DEVICES=1 python main_quantized_copy.py \
-    -n bwn-cos-600e-larger_batch \
-    -e 600 -b 512 --workers 8
+CUDA_VISIBLE_DEVICES=1 python main_bc.py \
+    -n bc-cos-preact-small_batch \
+    -e 200 -b 128 --workers 4

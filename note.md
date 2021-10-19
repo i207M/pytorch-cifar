@@ -22,3 +22,12 @@ Binarized Neural Networks: Training Neural Networks with Weights and
 Activations Constrained to +1 or −1
 
 不仅仅二值化了weights，而且二值化了activations
+
+## 待做实验
+
+- PreAct Multistep (Weight 1e-4, 5e-4)
+- PreAct Cosine
+- PreAct+BC Cosine
+- PreAct+BWN Cosine
+
+(all small batch)
