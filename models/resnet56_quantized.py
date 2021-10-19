@@ -4,6 +4,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 
 from .resnet56 import ResNet56
+from .preact_resnet56 import PreActResNet56
 
 
 class BinaryConnect(nn.Module):
@@ -56,6 +57,14 @@ def ResNet56_BinaryConnect():
 
 def ResNet56_BinaryWeightNet():
     return BinaryWeightNet(ResNet56())
+
+
+def PreActResNet56_BinaryConnect():
+    return BinaryConnect(PreActResNet56())
+
+
+def PreActResNet56_BinaryWeightNet():
+    return BinaryWeightNet(PreActResNet56())
 
 
 if __name__ == '__main__':
