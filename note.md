@@ -25,7 +25,9 @@ Activations Constrained to +1 or −1
 
 ## 待做实验
 
-- PreAct Multistep (Weight 1e-4, 5e-4)
+- PreAct Multistep
+  - Weight 1e-4 ok
+  - 5e-4
 - PreAct Cosine
 - PreAct+BC Cosine
 - PreAct+BWN Cosine

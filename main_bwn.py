@@ -136,7 +136,7 @@ def train(epoch: int):
     batch_time = time.time() - start_time
     avg_loss = train_loss / len(trainloader)
     avg_acc = 100. * correct / total
-    print('Train Loss: %.3f | Acc: %.3f | Time: %.3fms' % (avg_loss, avg_acc, batch_time))
+    print('Train Loss: %.3f | Acc: %.3f | Time: %.3fs' % (avg_loss, avg_acc, batch_time))
     writer.add_scalar('train/loss', avg_loss, epoch)
     writer.add_scalar('train/acc', avg_acc, epoch)
 
@@ -164,7 +164,7 @@ def test(epoch: int):
     batch_time = time.time() - start_time
     avg_loss = test_loss / len(testloader)
     avg_acc = 100. * correct / total
-    print('Test Loss: %.3f | Acc: %.3f | Time: %.3fms' % (avg_loss, avg_acc, batch_time))
+    print('Test Loss: %.3f | Acc: %.3f | Time: %.3fs' % (avg_loss, avg_acc, batch_time))
     writer.add_scalar('test/loss', avg_loss, epoch)
     writer.add_scalar('test/acc', avg_acc, epoch)
 
