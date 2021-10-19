@@ -105,7 +105,7 @@ optimizer = optim.SGD(
 # scheduler = torch.optim.lr_scheduler.MultiStepLR(
 #     optimizer, milestones=[100, 150], last_epoch=args.start_epoch - 1
 # )
-scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=200)
+scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epoch)
 
 
 # Training
@@ -126,7 +126,7 @@ def train(epoch: int):
         loss.backward()
         net.restore()  # for weight quantized net
         optimizer.step()
-        net.clip()  # for weight quantized net
+        # net.clip()  # for weight quantized net
 
         train_loss += loss.item()
         _, predicted = outputs.max(1)
