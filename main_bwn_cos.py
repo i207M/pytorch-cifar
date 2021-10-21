@@ -105,7 +105,9 @@ optimizer = optim.SGD(
 # scheduler = torch.optim.lr_scheduler.MultiStepLR(
 #     optimizer, milestones=[100, 150], last_epoch=args.start_epoch - 1
 # )
-scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epoch)
+scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+    optimizer, T_max=args.epoch, last_epoch=args.start_epoch - 1
+)
 
 
 # Training
