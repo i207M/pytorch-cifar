@@ -14,29 +14,20 @@ import torchvision
 import torchvision.transforms as transforms
 from torch.utils.tensorboard import SummaryWriter
 
-from models.resnet56_quantized import PreActResNet56_BinaryWeightNet
+from models.quantizednet56 import QuantizedNet56
 
 # Args
 parser = argparse.ArgumentParser(description='PyTorch Training')
-parser.add_argument(
-    '--workers', default=4, type=int, metavar='N', help='number of data loading workers (default: 4)'
-)
-parser.add_argument(
-    '-e', '--epoch', default=200, type=int, metavar='N', help='number of total epochs to run'
-)
-parser.add_argument(
-    '--start-epoch', default=0, type=int, metavar='N', help='manual epoch number (useful on restarts)'
-)
-parser.add_argument(
-    '-b', '--batch-size', default=128, type=int, metavar='N', help='mini-batch size (default: 128)'
-)
+parser.add_argument('--batch-size', default=128, type=int, metavar='N', help='mini-batch size (default: 128)')
+parser.add_argument('--epoch', default=200, type=int, metavar='N', help='number of total epochs to run')
 parser.add_argument('--lr', default=0.1, type=float, metavar='LR', help='initial learning rate')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M', help='momentum')
-parser.add_argument(
-    '--weight-decay', default=1e-4, type=float, metavar='W', help='weight decay (default: 1e-4)'
-)
-parser.add_argument('-n', '--name', default='exp', type=str, help='name of the training')
-parser.add_argument('-r', '--resume', default='', type=str, metavar='D', help='resume from checkpoint')
+parser.add_argument('--scheduler', default='step', type=str, metavar='S', help='scheduler (default: MultiStep)')
+parser.add_argument('--start-epoch', default=0, type=int, metavar='N', help='manual epoch number (useful on restarts)')
+parser.add_argument('--weight-decay', default=1e-4, type=float, metavar='W', help='weight decay (default: 1e-4)')
+parser.add_argument('--workers', default=4, type=int, metavar='N', help='number of data loading workers (default: 4)')
+parser.add_argument('--name', default='exp', type=str, help='name of the training')
+parser.add_argument('--resume', default='', type=str, help='resume from checkpoint')
 args = parser.parse_args()
 
 # Data
@@ -53,19 +44,11 @@ transform_test = transforms.Compose([
     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
 ])
 
-trainset = torchvision.datasets.CIFAR10(
-    root='./data', train=True, download=True, transform=transform_train
-)
-trainloader = torch.utils.data.DataLoader(
-    trainset, batch_size=args.batch_size, shuffle=True, num_workers=args.workers, pin_memory=True
-)
+trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_train)
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=args.workers, pin_memory=True)
 
-testset = torchvision.datasets.CIFAR10(
-    root='./data', train=False, download=True, transform=transform_test
-)
-testloader = torch.utils.data.DataLoader(
-    testset, batch_size=args.batch_size, shuffle=False, num_workers=args.workers, pin_memory=True
-)
+testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_test)
+testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, shuffle=False, num_workers=args.workers, pin_memory=True)
 
 classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
@@ -78,7 +61,7 @@ open(log_dir / 'args.txt', 'w').write(str(args.__dict__))
 
 # Model
 print('==> Building model..')
-net = PreActResNet56_BinaryWeightNet()
+net = QuantizedNet56()
 net = net.cuda()
 # net = torch.nn.DataParallel(net)
 cudnn.benchmark = True
@@ -96,16 +79,11 @@ if args.resume != '':
 
 # original weight decay = 1e-4
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(
-    net.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay
-)
-
-# scheduler = torch.optim.lr_scheduler.MultiStepLR(
-#     optimizer, milestones=[100, 150], last_epoch=args.start_epoch - 1
-# )
-scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-    optimizer, T_max=args.epoch, last_epoch=args.start_epoch - 1
-)
+optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
+if args.scheduler == 'step':
+    scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer, milestones=[100, 150], last_epoch=args.start_epoch - 1)
+elif args.scheduler == 'cos':
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epoch, last_epoch=args.start_epoch - 1)
 
 
 # Training
@@ -119,14 +97,11 @@ def train(epoch: int):
     net.train()
     for batch_idx, (inputs, targets) in enumerate(trainloader):
         inputs, targets = inputs.cuda(), targets.cuda()
-        net.binarize()  # for weight quantized net
         outputs = net(inputs)
         loss = criterion(outputs, targets)
         optimizer.zero_grad()
         loss.backward()
-        net.restore()  # for weight quantized net
         optimizer.step()
-        # net.clip()  # for weight quantized net
 
         train_loss += loss.item()
         _, predicted = outputs.max(1)
@@ -148,7 +123,6 @@ def test(epoch: int):
     correct = 0
 
     net.eval()
-    net.binarize()  # for weight quantized net
     with torch.no_grad():
         for batch_idx, (inputs, targets) in enumerate(testloader):
             inputs, targets = inputs.cuda(), targets.cuda()
@@ -159,7 +133,6 @@ def test(epoch: int):
             _, predicted = outputs.max(1)
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
-    net.restore()  # for weight quantized net
 
     batch_time = time.time() - start_time
     avg_loss = test_loss / len(testloader)
@@ -172,15 +145,14 @@ def test(epoch: int):
     global best_acc
     if avg_acc > best_acc:
         best_acc = avg_acc
-        save_checkpoint(wdir / 'best.pth', epoch)
+        save_checkpoint(wdir / 'best.pth', avg_acc, epoch)
 
 
-def save_checkpoint(path, epoch: int):
-    global best_acc
+def save_checkpoint(path, acc: float, epoch: int):
     print('Saving..')
     state = {
         'net': net.state_dict(),
-        'acc': best_acc,
+        'acc': acc,
         'epoch': epoch,
     }
     torch.save(state, path)
@@ -194,4 +166,4 @@ if __name__ == '__main__':
             test(epoch)
             scheduler.step()
     finally:
-        save_checkpoint(wdir / 'last.pth', epoch)
+        save_checkpoint(wdir / 'last.pth', 0, epoch)
