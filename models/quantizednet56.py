@@ -1,4 +1,3 @@
-'''Wrapper for BinaryConnect and Binary Weight Network'''
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -13,17 +12,14 @@ class QuantizationFunction(A.Function):
     def forward(ctx, input: Tensor, alpha: Tensor) -> Tensor:
         ctx.alpha = alpha.item()
         ctx.quantized = input.sign()
+
         return ctx.quantized * ctx.alpha
 
-    @once_differentiable
     @staticmethod
+    @once_differentiable
     def backward(ctx, grad_output: Tensor) -> Tensor:
-        grad_input = grad_alpha = None
-
-        if ctx.needs_input_grad[0]:
-            grad_input = ctx.alpha * grad_output
-        if ctx.needs_input_gard[1]:
-            grad_alpha = grad_output.view(-1).dot(ctx.quantized.view(-1))
+        grad_input = ctx.alpha * grad_output
+        grad_alpha = grad_output.view(-1).dot(ctx.quantized.view(-1)).view(1)
 
         return grad_input, grad_alpha
 
@@ -66,7 +62,8 @@ class QPreActBlock(nn.Module):
         out = F.relu(self.bn1(x))
         shortcut = self.shortcut(out) if hasattr(self, 'shortcut') else x
         out = self.conv1(out)
-        out = self.conv2(F.relu(self.bn2(out)))
+        out = F.relu(self.bn2(out))
+        out = self.conv2(out)
         out += shortcut
         return out
 

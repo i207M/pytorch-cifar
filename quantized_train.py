@@ -146,7 +146,7 @@ def test(epoch: int):
 
 
 def save_checkpoint(path, acc: float, epoch: int):
-    print('Saving...')
+    print('Saving..')
     state = {
         'net': net.state_dict(),
         'acc': acc,
