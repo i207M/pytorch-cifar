@@ -27,7 +27,7 @@ parser.add_argument('--start-epoch', default=0, type=int, metavar='N', help='man
 parser.add_argument('--weight-decay', default=1e-4, type=float, metavar='W', help='weight decay (default: 1e-4)')
 parser.add_argument('--workers', default=4, type=int, metavar='N', help='number of data loading workers (default: 4)')
 parser.add_argument('--name', default='exp', type=str, help='name of the training')
-parser.add_argument('--resume', default='', type=str, help='resume from checkpoint')
+parser.add_argument('--resume', default=None, type=str, help='resume from checkpoint')
 args = parser.parse_args()
 
 # Data
@@ -38,7 +38,6 @@ transform_train = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
 ])
-
 transform_test = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
@@ -46,28 +45,26 @@ transform_test = transforms.Compose([
 
 trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_train)
 trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=args.workers, pin_memory=True)
-
 testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_test)
 testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, shuffle=False, num_workers=args.workers, pin_memory=True)
-
 classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
 # Log
-date_str = time.strftime('%Y.%m.%d-%H.%M.%S', time.localtime())
+date_str = time.strftime('%m.%d-%H:%M:%S', time.localtime())
 log_dir = Path('./runs') / (date_str + '-' + args.name)
-wdir = log_dir / 'weights'
 writer = SummaryWriter(log_dir)
 open(log_dir / 'args.txt', 'w').write(str(args.__dict__))
+wdir = log_dir / 'weights'
 
 # Model
 print('==> Building model..')
 net = QuantizedNet56()
 net = net.cuda()
-# net = torch.nn.DataParallel(net)
 cudnn.benchmark = True
+# net = torch.nn.DataParallel(net)
 
 best_acc = 0  # best test accuracy
-if args.resume != '':
+if args.resume is not None:
     # Load checkpoint
     print('==> Resuming from checkpoint..')
     ckpt_path = Path(args.resume)
@@ -142,14 +139,14 @@ def test(epoch: int):
     writer.add_scalar('test/acc', avg_acc, epoch)
 
     # Save checkpoint
-    global best_acc
     if avg_acc > best_acc:
+        global best_acc
         best_acc = avg_acc
         save_checkpoint(wdir / 'best.pth', avg_acc, epoch)
 
 
 def save_checkpoint(path, acc: float, epoch: int):
-    print('Saving..')
+    print('Saving...')
     state = {
         'net': net.state_dict(),
         'acc': acc,
@@ -166,4 +163,4 @@ if __name__ == '__main__':
             test(epoch)
             scheduler.step()
     finally:
-        save_checkpoint(wdir / 'last.pth', 0, epoch)
+        save_checkpoint(wdir / 'last.pth', -1, epoch)
