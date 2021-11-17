@@ -139,8 +139,8 @@ def test(epoch: int):
     writer.add_scalar('test/acc', avg_acc, epoch)
 
     # Save checkpoint
+    global best_acc
     if avg_acc > best_acc:
-        global best_acc
         best_acc = avg_acc
         save_checkpoint(wdir / 'best.pth', avg_acc, epoch)
 
