@@ -8,19 +8,21 @@ from torch import Tensor
 from torch.nn.parameter import Parameter
 
 
-class QuantizationFunction(A.Function):
+class WeightQuantization(A.Function):
     @staticmethod
-    def forward(ctx, input: Tensor, alpha: Tensor) -> Tensor:
-        ctx.alpha = alpha.item()
-        ctx.quantized = input.sign()
+    def forward(ctx, weight: Tensor, alpha: Tensor) -> Tensor:
+        ctx.save_for_backward(weight, alpha)
 
-        return ctx.quantized * ctx.alpha
+        return alpha * weight.sign()
 
     @staticmethod
     @once_differentiable
     def backward(ctx, grad_output: Tensor) -> Tensor:
-        grad_input = ctx.alpha * grad_output
-        grad_alpha = grad_output.view(-1).dot(ctx.quantized.view(-1)).view(1)
+        weight, alpha = ctx.saved_tensors
+
+        grad_input = alpha * grad_output
+        grad_alpha = grad_output * weight.sign()
+        grad_alpha.unsqueeze_(0)
 
         return grad_input, grad_alpha
 
@@ -31,7 +33,7 @@ class QLinear(nn.Linear):
         self.alpha = Parameter(torch.ones(1))
 
     def forward(self, input: Tensor) -> Tensor:
-        quantized_weight = QuantizationFunction.apply(self.weight, self.alpha)
+        quantized_weight = WeightQuantization.apply(self.weight, self.alpha)
         return F.linear(input, quantized_weight, self.bias)
 
 
@@ -41,7 +43,7 @@ class QConv2d(nn.Conv2d):
         self.alpha = Parameter(torch.ones(1))
 
     def forward(self, input: Tensor) -> Tensor:
-        quantized_weight = QuantizationFunction.apply(self.weight, self.alpha)
+        quantized_weight = WeightQuantization.apply(self.weight, self.alpha)
         return self._conv_forward(input, quantized_weight, self.bias)
 
 
