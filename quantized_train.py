@@ -14,7 +14,8 @@ import torchvision
 import torchvision.transforms as transforms
 from torch.utils.tensorboard import SummaryWriter
 
-from models.quantizednet56 import QuantizedNet56
+from models.quantizednet56 import AlphaGradScale, QuantizedNet56, OneClipper
+from utils import analyse
 
 # Args
 parser = argparse.ArgumentParser(description='PyTorch Training')
@@ -98,12 +99,16 @@ def train(epoch: int):
         loss = criterion(outputs, targets)
         optimizer.zero_grad()
         loss.backward()
+        net.apply(AlphaGradScale)
         optimizer.step()
+        net.apply(OneClipper)
 
         train_loss += loss.item()
         _, predicted = outputs.max(1)
         total += targets.size(0)
         correct += predicted.eq(targets).sum().item()
+
+        analyse(net)
 
     batch_time = time.time() - start_time
     avg_loss = train_loss / len(trainloader)

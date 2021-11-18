@@ -1,9 +1,10 @@
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.autograd as A
 from torch.autograd.function import once_differentiable
-from torch.functional import Tensor
+from torch import Tensor
 from torch.nn.parameter import Parameter
 
 
@@ -27,7 +28,7 @@ class QuantizationFunction(A.Function):
 class QLinear(nn.Linear):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.alpha = Parameter(torch.randn(1))
+        self.alpha = Parameter(torch.ones(1))
 
     def forward(self, input: Tensor) -> Tensor:
         quantized_weight = QuantizationFunction.apply(self.weight, self.alpha)
@@ -37,7 +38,7 @@ class QLinear(nn.Linear):
 class QConv2d(nn.Conv2d):
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.alpha = Parameter(torch.randn(1))
+        self.alpha = Parameter(torch.ones(1))
 
     def forward(self, input: Tensor) -> Tensor:
         quantized_weight = QuantizationFunction.apply(self.weight, self.alpha)
@@ -100,6 +101,20 @@ class QPreActResNet(nn.Module):
 
 def QuantizedNet56():
     return QPreActResNet(QPreActBlock, [9, 9, 9])
+
+
+@torch.no_grad()
+def OneClipper(module: nn.Module) -> None:
+    if hasattr(module, 'weight'):
+        weight = module.weight.data
+        weight.clip_(-1, 1)
+
+
+def AlphaGradScale(module: nn.Module) -> None:
+    if hasattr(module, 'alpha'):
+        weight = module.weight
+        alpha = module.alpha
+        alpha.grad *= 0  # 1 / weight.nelement()
 
 
 if __name__ == '__main__':

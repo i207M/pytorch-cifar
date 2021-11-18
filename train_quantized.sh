@@ -1,1 +1,1 @@
-CUDA_VISIBLE_DEVICES=6 python quantized_train.py
+CUDA_VISIBLE_DEVICES=3 python quantized_train.py

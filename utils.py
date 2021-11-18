@@ -1,4 +1,8 @@
 import numpy as np
+import torch
+import torch.nn as nn
+import torch.nn.functional as F
+from torch import Tensor
 
 
 def count_params(net):
@@ -16,3 +20,20 @@ def check_nan(x: Tensor) -> bool:
     assert not_zero
     is_nan = np.isnan(arr).any()
     assert not is_nan
+
+
+def analyse(model: nn.Module):
+    n_total = n_positive = 0
+    max_abs = avg_abs = 0
+    for layer in model.modules():
+        if isinstance(layer, nn.Conv2d) or isinstance(layer, nn.Linear):
+            weight = layer.weight
+            n_total += weight.nelement()
+            n_positive += weight[weight > 0].count_nonzero().item()
+
+            abs_weight = weight.abs()
+            max_abs = max(abs_weight.max().item(), max_abs)
+            avg_abs += abs_weight.sum().item()
+
+    avg_abs /= n_total
+    print(f'{n_total=}, {n_positive=}, {max_abs=}, {avg_abs=}')
