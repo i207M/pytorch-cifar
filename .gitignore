@@ -5,6 +5,7 @@ data2/
 save_*
 log_*
 temp.py
+settings.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
