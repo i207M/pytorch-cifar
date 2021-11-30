@@ -18,23 +18,13 @@ from models.resnet56_quantized import PreActResNet56_BinaryWeightNet
 
 # Args
 parser = argparse.ArgumentParser(description='PyTorch Training')
-parser.add_argument(
-    '--workers', default=4, type=int, metavar='N', help='number of data loading workers (default: 4)'
-)
-parser.add_argument(
-    '-e', '--epoch', default=200, type=int, metavar='N', help='number of total epochs to run'
-)
-parser.add_argument(
-    '--start-epoch', default=0, type=int, metavar='N', help='manual epoch number (useful on restarts)'
-)
-parser.add_argument(
-    '-b', '--batch-size', default=128, type=int, metavar='N', help='mini-batch size (default: 128)'
-)
+parser.add_argument('--workers', default=4, type=int, metavar='N', help='number of data loading workers (default: 4)')
+parser.add_argument('-e', '--epoch', default=200, type=int, metavar='N', help='number of total epochs to run')
+parser.add_argument('--start-epoch', default=0, type=int, metavar='N', help='manual epoch number (useful on restarts)')
+parser.add_argument('-b', '--batch-size', default=128, type=int, metavar='N', help='mini-batch size (default: 128)')
 parser.add_argument('--lr', default=0.1, type=float, metavar='LR', help='initial learning rate')
 parser.add_argument('--momentum', default=0.9, type=float, metavar='M', help='momentum')
-parser.add_argument(
-    '--weight-decay', default=1e-4, type=float, metavar='W', help='weight decay (default: 1e-4)'
-)
+parser.add_argument('--weight-decay', default=1e-4, type=float, metavar='W', help='weight decay (default: 1e-4)')
 parser.add_argument('-n', '--name', default='exp', type=str, help='name of the training')
 parser.add_argument('-r', '--resume', default='', type=str, metavar='D', help='resume from checkpoint')
 args = parser.parse_args()
@@ -53,19 +43,11 @@ transform_test = transforms.Compose([
     transforms.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
 ])
 
-trainset = torchvision.datasets.CIFAR10(
-    root='./data', train=True, download=True, transform=transform_train
-)
-trainloader = torch.utils.data.DataLoader(
-    trainset, batch_size=args.batch_size, shuffle=True, num_workers=args.workers, pin_memory=True
-)
+trainset = torchvision.datasets.CIFAR10(root='./data', train=True, download=True, transform=transform_train)
+trainloader = torch.utils.data.DataLoader(trainset, batch_size=args.batch_size, shuffle=True, num_workers=args.workers, pin_memory=True)
 
-testset = torchvision.datasets.CIFAR10(
-    root='./data', train=False, download=True, transform=transform_test
-)
-testloader = torch.utils.data.DataLoader(
-    testset, batch_size=args.batch_size, shuffle=False, num_workers=args.workers, pin_memory=True
-)
+testset = torchvision.datasets.CIFAR10(root='./data', train=False, download=True, transform=transform_test)
+testloader = torch.utils.data.DataLoader(testset, batch_size=args.batch_size, shuffle=False, num_workers=args.workers, pin_memory=True)
 
 classes = ('plane', 'car', 'bird', 'cat', 'deer', 'dog', 'frog', 'horse', 'ship', 'truck')
 
@@ -96,16 +78,12 @@ if args.resume != '':
 
 # original weight decay = 1e-4
 criterion = nn.CrossEntropyLoss()
-optimizer = optim.SGD(
-    net.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay
-)
+optimizer = optim.SGD(net.parameters(), lr=args.lr, momentum=args.momentum, weight_decay=args.weight_decay)
 
 # scheduler = torch.optim.lr_scheduler.MultiStepLR(
 #     optimizer, milestones=[100, 150], last_epoch=args.start_epoch - 1
 # )
-scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
-    optimizer, T_max=args.epoch, last_epoch=args.start_epoch - 1
-)
+scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=args.epoch, last_epoch=args.start_epoch - 1)
 
 
 # Training
